@@ -7,8 +7,6 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        Console.WriteLine("Hello, World!");
-
         // Replace with your actual date
         DateTime dateToRetrieve = DateTime.Today;
 
