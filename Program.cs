@@ -12,10 +12,8 @@ class Program
 
         try
         {
-            // Create an instance of PowerService
             PowerService powerService = new PowerService();
 
-            // Example: Using asynchronous method GetTradesAsync
             IEnumerable<PowerTrade> trades = await powerService.GetTradesAsync(dateToRetrieve);
 
             Console.WriteLine($"Power Trades for {dateToRetrieve.ToShortDateString()}:");
