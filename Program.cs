@@ -9,7 +9,7 @@ class Program
     static async Task Main(string[] args)
     {
         IConfiguration config = LoadConfiguration();
-        
+
         if (config == null)
             throw new ArgumentNullException(nameof(config));
 
@@ -25,10 +25,10 @@ class Program
         string formattedDateTime = londonTime.ToString("yyyyMMdd_HHmm");
 
         Console.WriteLine("Formatted London Time: " + formattedDateTime);
-        
+
         string outputFileName = GetFileName(config, formattedDateTime);
         Console.WriteLine(outputFileName);
-    
+
 
         try
         {
@@ -40,6 +40,7 @@ class Program
             //PrintTrades(trades);
 
             PrintTotalVolumes(totalVolumesByPeriod);
+            SavePowerPositionsToFile(totalVolumesByPeriod, Path.Combine(csvFolderPath, outputFileName));
         }
         catch (Exception ex)
         {
@@ -104,7 +105,8 @@ class Program
     }
 
     //output file name
-    static string GetFileName(IConfiguration config, string datetime) {
+    static string GetFileName(IConfiguration config, string datetime)
+    {
         try
         {
             string fileName = $"{config["filePrefix"]}{config["filePrefixSep"]}{datetime}{config["fileExtension"]}";
@@ -141,5 +143,19 @@ class Program
             Console.WriteLine($"Period {kvp.Key}: Total Volume {kvp.Value}");
         }
     }
+
+    static void SavePowerPositionsToFile(Dictionary<int, double> dictionary, string filePath)
+    {
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            writer.WriteLine("Period,Total Volume");
+            foreach (var kvp in dictionary)
+            {
+                writer.WriteLine($"{kvp.Key},{kvp.Value}");
+            }
+        }
+        Console.WriteLine($"Saved total volumes to {filePath}");
+    }
+
 
 }
