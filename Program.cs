@@ -1,54 +1,64 @@
 ﻿using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
-using Axpo;
-using NUnit.Framework.Internal.Execution;
-using System.Data;
+using Axpo; // Ensure Axpo namespace is still imported
 
 class Program
 {
     static async Task Main(string[] args)
     {
-        IConfiguration config = LoadConfiguration();
+        // Schedule the task to run every 5 minutes
+        Timer timer = new Timer(TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
 
-        if (config == null)
-            throw new ArgumentNullException(nameof(config));
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
+        
+        timer.Dispose();
+    }
 
-        string csvFolderPath = GetFolderPath(config);
-        string timeZoneId = config["timeZoneId"];
-        TimeZoneInfo londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
-        DateTime londonTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, londonTimeZone);
-        Console.WriteLine($"Date time for Europe/London: {londonTime}");
+    static void TimerCallback(object state)
+    {
+        Console.WriteLine("Execute Task");
+        ExecuteTask().Wait();
+    }
 
-        DateTime dateToRetrieve = DateTime.Today.AddDays(7);
-        //DateTime dateToRetrieve = new DateTime(2015, 4, 1); // Example date
-        // Format the date and time as YYYYMMDD_HHMM
-        string formattedDateTime = londonTime.ToString("yyyyMMdd_HHmm");
-
-        Console.WriteLine("Formatted London Time: " + formattedDateTime);
-
-        string outputFileName = GetFileName(config, formattedDateTime);
-        Console.WriteLine(outputFileName);
-
-
+    static async Task ExecuteTask()
+    {
         try
         {
-            IEnumerable<PowerTrade> trades = await RetrieveTradesAsync(dateToRetrieve);
+            IConfiguration config = LoadConfiguration();
 
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+
+            string csvFolderPath = GetFolderPath(config);
+            string timeZoneId = config["timeZoneId"];
+            TimeZoneInfo londonTimeZone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+            DateTime londonTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, londonTimeZone);
+            Console.WriteLine($"Date time for Europe/London: {londonTime}");
+
+            DateTime dateToRetrieve = DateTime.Today.AddDays(0);
+            string formattedDateTime = londonTime.ToString("yyyyMMdd_HHmm");
+
+            Console.WriteLine("Formatted London Time: " + formattedDateTime);
+
+            string outputFileName = GetFileName(config, formattedDateTime);
+            Console.WriteLine(outputFileName);
+
+            IEnumerable<PowerTrade> trades = await RetrieveTradesAsync(dateToRetrieve);
             Dictionary<int, double> totalVolumesByPeriod = CalculateTotalVolumesByPeriod(trades);
 
-            //Console.WriteLine($"Power Trades for {dateToRetrieve.ToShortDateString()}:");
-            //PrintTrades(trades);
-
-            PrintTotalVolumes(totalVolumesByPeriod);
+            //PrintTotalVolumes(totalVolumesByPeriod);
             SavePowerPositionsToFile(totalVolumesByPeriod, Path.Combine(csvFolderPath, outputFileName));
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error retrieving or processing trades: {ex.Message}");
         }
-
-        Console.WriteLine("Press any key to exit...");
-        Console.ReadKey();
     }
 
     static async Task<IEnumerable<PowerTrade>> RetrieveTradesAsync(DateTime dateToRetrieve)
@@ -57,7 +67,6 @@ class Program
         IEnumerable<PowerTrade> trades = await powerService.GetTradesAsync(dateToRetrieve);
         return trades;
     }
-
 
     internal static Dictionary<int, double> CalculateTotalVolumesByPeriod(IEnumerable<PowerTrade> trades)
     {
@@ -114,23 +123,7 @@ class Program
         }
         catch (Exception ex)
         {
-            // Handle or log the exception as needed
             throw new ApplicationException("Failed to generate file name", ex);
-        }
-    }
-
-    static void PrintTrades(IEnumerable<PowerTrade> trades)
-    {
-        Console.WriteLine($"Power Trades:");
-
-        foreach (PowerTrade trade in trades)
-        {
-            Console.WriteLine($"Trade ID: {trade.TradeId}");
-
-            foreach (PowerPeriod period in trade.Periods)
-            {
-                Console.WriteLine($"Period {period.Period}: Volume: {period.Volume}");
-            }
         }
     }
 
@@ -156,6 +149,4 @@ class Program
         }
         Console.WriteLine($"Saved total volumes to {filePath}");
     }
-
-
 }
