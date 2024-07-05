@@ -13,6 +13,13 @@
     </Reference>
   </ItemGroup>
 
+  <!-- Specify that config.json should be copied to the output directory -->
+  <ItemGroup>
+    <None Update="config/appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <!-- Packages needed for application functionality -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
