@@ -12,7 +12,7 @@ class Program
     static async Task Main(string[] args)
     {
         // Schedule the task to run every 5 minutes
-        Timer timer = new Timer(TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+        Timer timer = new Timer(TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(15));
 
         Console.WriteLine("Press any key to exit...");
         Console.ReadKey();
